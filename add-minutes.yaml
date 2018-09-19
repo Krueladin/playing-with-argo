@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: test-wf-
+spec:
+  entrypoint: add-minutes
+  arguments:
+    parameters:
+    - name: minutes
+      value: 10
+  templates:
+  - name: add-minutes
+    inputs:
+      parameters:
+      - name: minutes
+    steps:
+    - - name: add-minutes
+        template: scale-add-time
+        arguments:
+          parameters:
+          - name: scale
+            value: 60
+          - name: additional
+            value: "{{inputs.parameters.minutes}}"
+      
+  - name: scale-add-time
+   inputs:
+      parameters:
+      - name: scale
+        value: "1"
+      - name: additional
+    script:
+      command:
+      - bash
+      image: debian:9.4
+      source: |
+        date_now=$(date +%s);
+        (( scale_date = "{{inputs.parameters.scale}}" * "{{inputs.parameters.additional}}" ));
+        (( result = $scale_date + $date_now ));
+        echo $result
+
